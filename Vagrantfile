@@ -2,11 +2,16 @@ $script= <<SCRIPT
   #instalacion de paquetes necesarios
   apt-get -y install apache2
   apt-get -y install git
+  git clone -b mybranch --single-branch https://gitlab.com/pablomagub/vagrant.git /home/vagrant
+  cp /home/vagrant/sition1.conf /etc/apach2/sites-available/sition1.conf
+  cp /home/vagrant/sition2.conf /etc/apach2/sites-available/sition2.conf
+  a2ensites /etc/apach2/sites-available/sition1.conf
+  a2ensites /etc/apach2/sites-available/sition2.conf
+  a2enmod vhost_alias
+  service apache2 restart
   #configurar apache para crear 2 host virtuales y descargar un proyecto en cada host
-  mkdir -p /vagrant/www/proyecto1
-  mkdir -p /vagrant/www/proyecto2
-  git https://github.com/pablomagana/jQueryActividades.git /vagrant/www/proyecto1
-  git https://github.com/pablomagana/jQueryActividades.git /vagrant/www/proyecto2
+  git clone https://github.com/pablomagana/jQueryActividades.git /vagrant/www/proyecto1
+  git clone https://github.com/pablomagana/jQueryActividades.git /vagrant/www/proyecto2
 
 SCRIPT
 # -*- mode: ruby -*-
@@ -27,6 +32,11 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest:80, host:8080
 
   config.vm.provision "shell", inline: $script
+
+  config.vm.synced_folder "C:/tools/cygwin/home/pablo/vagrantc", "/vagrant", disable: true#desabilito en directorio compartido por defecto
+  #creo dos directorios compartidos
+  config.vm.synced_folder "C:/tools/cygwin/home/pablo/vagrantc/proyecto1", "/var/www/proyecto1"
+  config.vm.synced_folder "C:/tools/cygwin/home/pablo/vagrantc/proyecto2", "/var/www/proyecto2"
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -44,7 +54,9 @@ Vagrant.configure("2") do |config|
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
   # your network.
-  # config.vm.network "public_network"
+
+############################################
+   config.vm.network "public_network",ip: "192.168.1.99"
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
